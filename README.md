@@ -20,46 +20,64 @@ The **RecursiveNamespace** class can be used in the same way as Python's **Simpl
 I prefer to use the class as the following
 
 ```python
-results = RN(
-    params=RN(
+from recursivenamespace import rns
+results = rns(
+    params=rns(
         alpha=1.0,
         beta=2.0,
-        dataset_name='dataset_name',
-        dataset_path='dataset_path',
-        classifier_name='classifier_name',
     ),
-    metrics=RN(
+    metrics=rns(
         accuracy=98.79,
         f1=97.62
     )
 )
-
-print(results.params.k1) # 1.0
-print(results.metrics.accuracy) # 98.79
+```
+Access elements as dictionary keys or namespace attributes.
+```python
+print(results.params.alpha) # 1.0
+print(results.params['alpha']) # 1.0
+print(results['metrics'].accuracy) # 98.79
 ```
 
-Then I can add more information on the fly.
 
+Convert just the metrics to dictionary.
+```python
+metrics_dict = results.metrics.to_dict()
+print(metrics_dict) # {'accuracy': 98.79, 'f1': 97.62}
+```
+Or convert all of it to a nested dictionary.
+```python
+from pprint import pprint
+output_dict = results.to_dict()
+pprint(output_dict)
+# {'metrics': {'accuracy': 98.79, 'f1': 97.62},
+# 'params':  {'alpha': 1.0, 'beta': 2.0}}
+```
+Flatten the dictionary using a separator for keys.
+```python
+flat_dict = results.to_dict(flatten_sep='_')
+pprint(flat_dict)
+# {'metrics_accuracy': 98.79,
+#  'metrics_f1': 97.62,
+#  'params_alpha': 1.0,
+#  'params_beta': 2.0}
+```
+Add more fields on the fly.
 ```python
 results.experiment_name = 'experiment_name'
 results.params.dataset_version = 'dataset_version'
 results.params.gamma = 0.35
-print(results.params.gamma) # 0.35
 ```
 
-Then I'd convert it to nested or flattened dictionary.
-  
+The character '-' in a key will be converted to '_'
 ```python
-output_dict = results.to_dict()
-output_dict_flat = results.to_dict(flatten_sep='_')  # flattened dictionary
-```
-Or just convert metrics to dictionary.
-
-```python
-metrics_dict = results.metrics.to_dict()
+results.params['some-key'] = 'some-value'
+print(results.params.some_key) # some-value
+print(results.params['some-key'] == results.params['some_key']) # True
+print(results.params['some-key'] == results.params.some_key) # True
 ```
 
-Another usage would be to convert a dictionary to a recursive namespace.
+Another usage is to convert a dictionary to a recursive namespace.
 
 ```python
 from pprint import pprint
@@ -76,15 +94,12 @@ data = {
 }
 
 rn = RecursiveNamespace(data)
-print(rn) #RN(name=John Doe, age=30, address=RN(street=123 Main St, city=Anytown))
+print(rn) #RNS(name=John Doe, age=30, address=RN(street=123 Main St, city=Anytown))
 
 print(rn.name) # John Doe
 print(rn.address.street) # 123 Main St
 
 print(rn.to_dict()) # {'name': 'John Doe', 'age': 30, 'address': {'street': '123 Main St', 'city': 'Anytown'}}
-
-pprint(rn.to_dict(flatten_sep='_')) 
-# {'name': 'John Doe', 'age': 30, 'address_street': '123 Main St', 'address_city': 'Anytown'}
 ```
 
 # Testing
